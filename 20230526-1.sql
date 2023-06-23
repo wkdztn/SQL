@@ -1,0 +1,88 @@
+---------- 뷰:기본 테이블로부터 유도된 가상 테이블. ----------
+-- 물리적으로 존재하지 않지만 테이블로 있는 것처럼 간주된다(뷰는 논리 테이블)
+
+CREATE OR REPLACE VIEW ACADEMY_ALL AS
+SELECT * FROM ACADEMY_A;
+
+SELECT * FROM ACADEMY_ALL WHERE STUDENT_NAME = '김연아';
+
+CREATE OR REPLACE VIEW ACADEMY_STUDENT_NAME AS
+SELECT STUDENT_NAME FROM ACADEMY_A;
+
+SELECT * FROM ACADEMY_STUDENT_NAME;
+
+-- 조인한 테이블 생성 // (가상의 테이블을 만드는 것이므로 중복된 컬럼이 선택되지 않도록 주의)
+CREATE OR REPLACE VIEW ACADEMY_JOIN AS
+SELECT T1.STUDENT_NAME, T1.STUDENT_NO
+FROM ACADEMY_A T1, ACADEMY_B T2
+WHERE T1.STUDENT_NO = T2.STUDENT_NO;
+
+SELECT * FROM ACADEMY_JOIN;
+
+DROP VIEW ACADEMY_JOIN;
+
+SELECT * FROM STUDENT_GRADE; -- 4장에 있는 테이블 생성
+
+---------- 윈도우 함수: OVER 키워드와 사용되며 역할에 따라 나눔. ----------
+-- OVER()사용시 GROUP BY나 서브쿼리를 사용하지 않고 집계 함수를 사용할 수 있다.
+
+-- 순위함수
+-- RANK: 순위를 매기면서 같은 순위가 존재하면 존재하는 수만큼 순위를 건너 뜀.
+SELECT STUDENT_NAME, SCORE, RANK() OVER(ORDER BY SCORE DESC) -- 점수가 가장 작은 사람 출력하려면 ASC
+FROM STUDENT_GRADE;
+
+-- DENSE_RANK: 순위를 매기면서 같은 순위가 존재하더라도 건너뛰지 않고 이어서 매김.
+SELECT STUDENT_NAME, SCORE, DENSE_RANK() OVER(ORDER BY SCORE DESC)
+FROM STUDENT_GRADE;
+
+-- ROW_NUMBER: 무조건 순차적으로 순위를 매김
+SELECT STUDENT_NAME, SCORE, ROW_NUMBER() OVER(ORDER BY SCORE DESC)
+FROM STUDENT_GRADE;
+
+-- 집계함수
+-- 합계 
+SELECT TYPE, SUM(PRICE) AS SUM FROM GIFT GROUP BY TYPE; -- 뭉쳐서 출력됨
+SELECT TYPE, SUM(PRICE) OVER(PARTITION BY TYPE) AS SUM FROM GIFT; -- 타입에 있는게 그대로 출력됨
+
+---------- 시퀀스 ----------
+
+-- 시퀀스 생성
+CREATE SEQUENCE EMP_SEQ
+        INCREMENT BY 1 -- 1씩 증가 시킴
+        START WITH 1 -- 시작값
+        MINVALUE 1 -- 최소값
+        MAXVALUE 9999 -- 최대값
+        NOCYCLE
+        NOCACHE
+        NOORDER;
+
+-- 시퀀스 사용
+SELECT EMP_SEQ.NEXTVAL FROM DUAL; -- 증가(명령문 실행할때마다 1씩 증가함)
+SELECT EMP_SEQ.CURRVAL FROM DUAL; -- 현재 값 조회
+
+-- 시퀀스를 이용한 INSERT
+INSERT INTO EMP VALUES (EMP_SEQ.NEXTVAL, '둘리', 10);
+INSERT INTO EMP VALUES (EMP_SEQ.NEXTVAL, '또치', 10);
+INSERT INTO EMP VALUES (EMP_SEQ.NEXTVAL, '고길동', 10);
+
+SELECT * FROM EMP;
+DROP TABLE DEPT CASCADE CONSTRAINTS; -- 제약조건 무시하고 삭제
+
+-- 시퀀스 속성 변경
+ALTER SEQUENCE EMP_SEQ INCREMENT BY 2;
+ALTER SEQUENCE EMP_SEQ MAXVALUE 9999999;
+
+-- 시퀀스 삭제
+DROP SEQUENCE EMP_SEQ;
+
+-- 시퀀스 현재 값 변경 (현재 시퀀스값은 6인데 데이터값을 11부터 시작 할 경우)
+ALTER SEQUENCE EMP_SEQ INCREMENT BY 4; -- 증가값 4씩 되도록 변경
+
+SELECT EMP_SEQ.NEXTVAL FROM DUAL;
+
+ALTER SEQUENCE EMP_SEQ INCREMENT BY 1; -- 증가값 1씩 되도록 변경
+
+---------- DDL ----------
+TRUNCATE TABLE STUDENT_GRADE; -- 테이블의 데이터 전체 날려줌
+SELECT * FROM STUDENT_GRADE;
+

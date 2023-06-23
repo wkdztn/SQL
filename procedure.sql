@@ -1,0 +1,1 @@
+EXEC EX_PROC('가전제품', 'TV');
